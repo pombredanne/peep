@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='peep',
-    version='0.9',
+    version='1.3',
     description='A "pip install" that is cryptographically guaranteed repeatable',
     long_description=open('README.rst').read(),
     author='Erik Rose',
@@ -13,7 +13,8 @@ setup(
     license='MIT',
     py_modules=['peep'],
     entry_points={
-        'console_scripts': ['peep = peep:main']
+        'console_scripts': ['peep = peep:main',
+                            'peep-%s.%s = peep:main' % sys.version_info[:2]]
         },
     url='https://github.com/erikrose/peep',
     include_package_data=True,
@@ -24,6 +25,9 @@ setup(
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Topic :: Software Development :: Build Tools',
         'Topic :: System :: Installation/Setup',
         'Topic :: System :: Systems Administration'

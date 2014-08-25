@@ -22,6 +22,28 @@ maintain, no enormous vendor libs to wrestle. Just ``requirements.txt`` with
 some funny-looking comments and peace of mind.
 
 
+Quick FAQ
+=========
+
+1. Peep guarantees repeatability.
+
+   If you ``peep install`` package x version y, every subsequent install of package
+   x version y will be the same as the original, or Peep will complain.
+
+2. Peep does not vet your packages.
+
+   Peep is not a substitute for vetting your packages. If you don't vet them,
+   then they are not vetted.
+
+3. Peep does not alleviate trust problems with authors or package indexes.
+
+   All peep does is guarantee that subsequent downloads of package x version y
+   are the same as the first one you did. It doesn't guarantee the author of
+   that package is trustworthy. It doesn't guarantee that the author of that
+   package released that package. It doesn't guarantee that the package index
+   is trustworthy.
+
+
 Switching to Peep
 =================
 
@@ -53,6 +75,9 @@ Switching to Peep
     # sha256: u_8C3DCeUoRt2WPSlIOnKV_MAhYkc40zNZxDlxCA-as
     Pygments==1.4
 
+    # sha256: A1gwhyCNozcxug18_9RjJTmJQa1rctOt-AnP7_yR0PM
+    https://github.com/jsocol/commonware/archive/b5544185b2d24adc1eb512735990752400ce9cbd.zip#egg=commonware
+
     -------------------------------
     Not proceeding to installation.
 2. Vet the packages coming off PyPI in whatever way you typically do.
@@ -69,7 +94,7 @@ The Fearsome Warning
 If, during installation, a hash doesn't match, ``peep`` will say something like
 this::
 
-    THE FOLLOWING PACKAGES DIDN'T MATCHES THE HASHES SPECIFIED IN THE
+    THE FOLLOWING PACKAGES DIDN'T MATCH THE HASHES SPECIFIED IN THE
     REQUIREMENTS FILE. If you have updated the package versions, update the
     hashes. If not, freak out, because someone has tampered with the packages.
 
@@ -103,20 +128,50 @@ Other Niceties
   which are no longer needed.
 
 
+Embedding
+=========
+
+Peep was designed for unsupervised continuous deployment scenarios. In such
+scenarios, manual ahead-of-time prepartion on the deployment machine is a
+liability: one more thing to go wrong. To relieve you of having to install (and
+upgrade) ``peep`` by hand on your server or build box, we've made ``peep``
+embeddable. You can copy the ``peep.py`` file directly into your project's
+source tree and call it from there in your deployment script. This also gives
+you an obvious starting point for your chain of trust: however you trust your
+source code is how you trust your copy of ``peep``, and ``peep`` verifies
+everything else via hashes. (Equivalent would be if your OS provided peep as a
+package--presumably you trust your OS packages already--but this is not yet
+common.)
+
+
 Troubleshooting
 ===============
 
 Are you suddenly getting the Fearsome Warning? Maybe you're really in trouble,
 but maybe something more innocuous is happening.
 
+Architecture-Specific Packages
+------------------------------
+
+If your packages install from wheels or other potentially architecture-specific
+sources, their hashes will obviously differ across platforms. If you deploy on
+more than one, you'll need more than one hash.
+
+Old-PyPI Roulette
+-----------------
+
 A few packages offer downloads in multiple formats: for example, zips and
 tarballs. PyPI used to be unpredictable as to which it offered first, and pip
 simply takes the first one offered. Thus, if you're running an old version of
 PyPI internally or have some other Cheeseshop implementation which lacks a
 stable sort order, some packages may effectively have more than one valid hash
-for a given version. To allow for these, you can stack up multiple known-good
-hashes above a requirement, as long as they are within a contiguous block of
-commented lines::
+for a given version.
+
+How To Specify Multiple Hashes
+------------------------------
+
+To support these scenarios, you can stack up multiple known-good hashes above a
+requirement, as long as they are within a contiguous block of commented lines::
 
     # Tarball:
     # sha256: lvpN706AIAvoJ8P1EUfdez-ohzuSB-MyXUe6Rb8ppcE
@@ -140,9 +195,42 @@ hash`` over both original archives, like so, and add the result to my
 Version History
 ===============
 
+1.3
+  * Pass through most args to the invocation of ``pip install`` that actually
+    installs the downloaded archive. This means you can use things like
+    ``--install-options`` fruitfully.
+  * Add Python 3.4 support by correcting an import.
+  * Install a second peep script named after the active Python version, e.g.
+    peep-2.7. This is a convenience for those using multiple versions of
+    Python and not using virtualenvs.
+
+1.2
+  * Support GitHub-style tarballs (that is, ones whose filenames don't contain
+    the distro name or version and whose version numbers aren't reliable) in
+    requirements files. (Will Kahn-Greene)
+  * Warn when a URL-based requirement lacks ``#egg=``. (Chris Adams)
+
+1.1
+  * Support Python 3. (Keryn Knight)
+
+1.0.2
+  * Add support for .tar.bz2 archives. (Paul McLanahan)
+
+1.0.1
+  * Fix error (which failed safe) installing packages whose distro names
+    contain underscores. (Chris Ladd)
+
+1.0
+  * Add wheel support. Peep will now work fine when pip decides to download a
+    wheel file. (Paul McLanahan)
+
+0.9.1
+  * Don't crash when trying to report a missing hash on a package that's
+    already installed.
+
 0.9
   * Put the operative parts of peep into a single module rather than a package,
-    and make it directly executable.
+    and make it directly executable. (Brian Warner)
 
 0.8
   * Support installing into non-empty virtualenvs, for speed. We do this by
